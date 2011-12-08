@@ -18,6 +18,11 @@ t1 = Thread.new {
         Thread.start(server.accept) do |client|
             while line = client.gets   # Read lines from the socket
                 texto = line.chop.split('|')
+                if texto[1].to_i > contador 
+                mutex.synchronize {
+                    contador = texto[1].to_i 
+                }
+                end
                 puts "RECEBENDO #{texto[1]}"
             end
 #            client.puts(Time.now.ctime) # Send the time to the client
@@ -35,7 +40,9 @@ proccess.each do |port|
     Thread.new {
         s = TCPSocket.open('localhost', port)
         for n in 1..5 do
-            contador = contador + 1
+            mutex.synchronize {
+                contador = contador + 1
+            }
             puts "ENVIANDO CONTADOR=#{contador}" 
             s.puts("#{PORTA}|#{contador}|#{PORTA}#{contador}")
         end
