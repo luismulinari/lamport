@@ -22,12 +22,13 @@ t1 = Thread.new {
             while line = client.gets   # Read lines from the socket
                 texto = line.chop
                 puts "RECEBENDO #{texto}"
+            
                 texto = texto.split('|')
                 rec_pid = texto[0].to_i
                 rec_contador = texto[1].to_i
                 rec_msg = texto[2].to_s
 
-                buffer_entrada.push({'pid' => rec_pid, 'contador' => rec_contador, 'msg' => rec_msg})
+                buffer_entrada.push({'contador' => rec_contador, 'pid' => rec_pid, 'msg' => rec_msg})
 
                 mutex.synchronize {
                     if rec_contador > contador 
@@ -44,26 +45,31 @@ t1 = Thread.new {
 
 
 enter = STDIN.gets # enter para comecar a disparar msgs
-proccess = [2000, 2001]
+proccess = [2000, 2001, 2002]
 
 s = Array.new
 
-proccess.each do |port|
-    Thread.new {
-        s[port] = TCPSocket.open('localhost', port)
+
         for n in 1..5 do
             mutex.synchronize {
                 contador = contador + 1
             }
-            msg = MD5.md5(rand(1234567).to_s).to_s + '%' + PORTA.to_s + '%' + contador.to_s
-            puts "ENVIANDO MSG=#{msg}" 
-            s[port].puts("#{PORTA}|#{contador}|#{msg}")
+            #msg = MD5.md5(rand(1234567).to_s).to_s + '%' + PORTA.to_s + '%' + contador.to_s
+            msg = PORTA.to_s + '|' + contador.to_s + '|' + rand(1234567).to_s
+            
+        
+            proccess.each do |port|
+                    s[port] = TCPSocket.open('localhost', port)
+                    puts "ENVIANDO [#{port}] = " + msg
+                    s[port].puts(msg)
+                    sleep(rand())
+            end
+    
         end
-    }
-end
 
 enter = STDIN.gets # enter para comecar ler array 
 
+            
 buffer_entrada.each do |p, c, m| 
     puts "RECEBIDO #{p} #{c} #{m}";
 end
